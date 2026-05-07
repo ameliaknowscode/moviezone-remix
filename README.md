@@ -51,10 +51,17 @@ docker exec -it moviezone-pg psql -U moviezone -c "CREATE DATABASE moviezone_rem
 ```bash
 cp .env.example .env
 npm install
+npm run db:migrate
 npm run dev
 ```
 
 The app will be available at [http://localhost:5173](http://localhost:5173).
+
+To insert a few sample movies for development:
+
+```bash
+npm run db:seed
+```
 
 ## License
 
