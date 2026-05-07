@@ -26,7 +26,7 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   const response = await auth.api.signUpEmail({
-    body: { email, password, name: username },
+    body: { email, password, name: username, callbackURL: "/profile" },
     asResponse: true,
   });
 
@@ -40,14 +40,7 @@ export async function action({ request }: Route.ActionArgs) {
     };
   }
 
-  const setCookie = response.headers.get("set-cookie");
-  return new Response(null, {
-    status: 302,
-    headers: {
-      Location: "/profile",
-      ...(setCookie ? { "Set-Cookie": setCookie } : {}),
-    },
-  });
+  return redirect("/verify-email-sent");
 }
 
 export default function SignUp({ actionData }: Route.ComponentProps) {

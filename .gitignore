@@ -8,3 +8,6 @@
 
 # Editors
 .idea/
+
+# Log mailer output
+/logs/

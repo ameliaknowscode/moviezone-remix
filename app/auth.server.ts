@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "~/db/client.server";
+import { sendEmail } from "~/mailer.server";
 import { accounts, sessions, users, verifications } from "~/db/schema";
 
 export const auth = betterAuth({
@@ -15,6 +16,26 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: false,
+    requireEmailVerification: true,
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    sendOnSignIn: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendEmail({
+        to: user.email,
+        subject: "Verify your email — Movie Zone",
+        text: [
+          `Hi ${user.name ?? "there"},`,
+          ``,
+          `Click the link below to verify your email and finish setting up your Movie Zone account:`,
+          ``,
+          url,
+          ``,
+          `This link expires in an hour. If you didn't sign up, you can ignore this email.`,
+        ].join("\n"),
+      });
+    },
   },
 });
