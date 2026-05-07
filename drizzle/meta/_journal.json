@@ -8,6 +8,13 @@
       "when": 1778118963691,
       "tag": "0000_nifty_micromacro",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1778131108929,
+      "tag": "0001_fair_xavin",
+      "breakpoints": true
     }
   ]
 }
