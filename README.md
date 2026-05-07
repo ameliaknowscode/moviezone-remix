@@ -50,6 +50,11 @@ docker exec -it moviezone-pg psql -U moviezone -c "CREATE DATABASE moviezone_rem
 
 ```bash
 cp .env.example .env
+```
+
+Then fill in `BETTER_AUTH_SECRET` in `.env` — generate one with `openssl rand -base64 32`.
+
+```bash
 npm install
 npm run db:migrate
 npm run dev
