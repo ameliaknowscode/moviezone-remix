@@ -60,7 +60,9 @@ npm run db:migrate
 npm run dev
 ```
 
-The app will be available at [http://localhost:5173](http://localhost:5173).
+The app will be available at [http://localhost:5176](http://localhost:5176).
+
+In development, outgoing emails (verification, password reset) are written to `logs/mail.log` instead of being sent — open the file to find the latest verification link. Set `MAILER=resend` and `RESEND_API_KEY=…` in `.env` to send real email via [Resend](https://resend.com/).
 
 To insert a few sample movies for development:
 
