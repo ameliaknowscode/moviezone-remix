@@ -12,6 +12,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   return null;
 }
 
+const USERNAME_PATTERN = /^[a-z0-9_]{3,20}$/;
+
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const email = String(formData.get("email") ?? "").trim();
@@ -25,8 +27,22 @@ export async function action({ request }: Route.ActionArgs) {
     };
   }
 
+  if (!USERNAME_PATTERN.test(username)) {
+    return {
+      error:
+        "Username must be 3–20 characters: lowercase letters, numbers, or underscores.",
+      values: { email, username },
+    };
+  }
+
   const response = await auth.api.signUpEmail({
-    body: { email, password, name: username, callbackURL: "/profile" },
+    body: {
+      email,
+      password,
+      name: username,
+      username,
+      callbackURL: "/profile",
+    },
     asResponse: true,
   });
 
