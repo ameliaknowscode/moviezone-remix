@@ -1,6 +1,9 @@
 import { Form, redirect } from "react-router";
+import { eq } from "drizzle-orm";
 import type { Route } from "./+types/profile";
 import { auth } from "~/auth.server";
+import { db } from "~/db/client.server";
+import { users } from "~/db/schema";
 
 export function meta() {
   return [{ title: "Profile — Movie Zone" }];
@@ -9,6 +12,15 @@ export function meta() {
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session) throw redirect("/sign-in");
+
+  const [userRecord] = await db
+    .select({ welcomedAt: users.welcomedAt })
+    .from(users)
+    .where(eq(users.id, session.user.id))
+    .limit(1);
+
+  if (!userRecord?.welcomedAt) throw redirect("/welcome");
+
   return { user: session.user };
 }
 

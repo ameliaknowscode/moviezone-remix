@@ -15,6 +15,13 @@
       "when": 1778131108929,
       "tag": "0001_fair_xavin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778214722121,
+      "tag": "0002_hard_captain_america",
+      "breakpoints": true
     }
   ]
 }
