@@ -11,6 +11,13 @@ export const movies = pgTable("movies", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   year: integer("year").notNull(),
+  slug: text("slug").unique(),
+  synopsis: text("synopsis"),
+  runtime: integer("runtime"),
+  country: text("country"),
+  language: text("language"),
+  imdbId: text("imdb_id"),
+  letterboxdSlug: text("letterboxd_slug"),
 });
 
 export const users = pgTable("users", {
