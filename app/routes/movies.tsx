@@ -2,6 +2,7 @@ import { Form, Link } from "react-router";
 import type { Route } from "./+types/movies";
 import { db } from "~/db/client.server";
 import { movies as moviesTable } from "~/db/schema";
+import { movieSlug } from "~/lib/slug";
 
 export function meta() {
   return [{ title: "Movies" }];
@@ -27,7 +28,17 @@ export async function action({ request }: Route.ActionArgs) {
     return { errors, values: { title, year: yearRaw } };
   }
 
-  await db.insert(moviesTable).values({ title, year });
+  const slug = movieSlug(title, year);
+
+  try {
+    await db.insert(moviesTable).values({ title, year, slug });
+  } catch {
+    return {
+      errors: { title: "A movie with this title and year already exists" },
+      values: { title, year: yearRaw },
+    };
+  }
+
   return { ok: true } as const;
 }
 
@@ -83,7 +94,7 @@ export default function Movies({
         {loaderData.movies.map((movie) => (
           <li key={movie.id}>
             <Link
-              to={`/movies/${movie.id}`}
+              to={movie.slug ? `/movies/${movie.slug}` : "#"}
               className="hover:underline"
             >
               {movie.title}

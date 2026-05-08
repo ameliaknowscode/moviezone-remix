@@ -3,21 +3,18 @@ import { eq } from "drizzle-orm";
 import type { Route } from "./+types/movie";
 import { db } from "~/db/client.server";
 import { movies as moviesTable } from "~/db/schema";
+import { movieSlug } from "~/lib/slug";
 
 export function meta({ data }: Route.MetaArgs) {
   return [{ title: data ? data.movie.title : "Movie" }];
 }
 
 export async function loader({ params }: Route.LoaderArgs) {
-  const id = Number(params.id);
-  if (!Number.isInteger(id)) {
-    throw new Response("Not Found", { status: 404 });
-  }
-
   const [movie] = await db
     .select()
     .from(moviesTable)
-    .where(eq(moviesTable.id, id));
+    .where(eq(moviesTable.slug, params.slug))
+    .limit(1);
 
   if (!movie) {
     throw new Response("Not Found", { status: 404 });
@@ -27,16 +24,11 @@ export async function loader({ params }: Route.LoaderArgs) {
 }
 
 export async function action({ params, request }: Route.ActionArgs) {
-  const id = Number(params.id);
-  if (!Number.isInteger(id)) {
-    throw new Response("Not Found", { status: 404 });
-  }
-
   const formData = await request.formData();
   const intent = formData.get("intent");
 
   if (intent === "delete") {
-    await db.delete(moviesTable).where(eq(moviesTable.id, id));
+    await db.delete(moviesTable).where(eq(moviesTable.slug, params.slug));
     return redirect("/movies");
   }
 
@@ -55,10 +47,25 @@ export async function action({ params, request }: Route.ActionArgs) {
       return { errors, values: { title, year: yearRaw } };
     }
 
-    await db
-      .update(moviesTable)
-      .set({ title, year })
-      .where(eq(moviesTable.id, id));
+    const newSlug = movieSlug(title, year);
+
+    try {
+      await db
+        .update(moviesTable)
+        .set({ title, year, slug: newSlug })
+        .where(eq(moviesTable.slug, params.slug));
+    } catch {
+      return {
+        errors: {
+          title: "A movie with this title and year already exists",
+        },
+        values: { title, year: yearRaw },
+      };
+    }
+
+    if (newSlug !== params.slug) {
+      return redirect(`/movies/${newSlug}`);
+    }
 
     return { ok: true } as const;
   }
@@ -82,10 +89,54 @@ export default function Movie({
         ← Back to movies
       </Link>
 
-      <h1 className="text-2xl font-bold mt-2 mb-4">
+      <h1 className="text-2xl font-bold mt-2 mb-2">
         {movie.title}{" "}
         <span className="text-gray-500 font-normal">({movie.year})</span>
       </h1>
+
+      {(movie.runtime || movie.country || movie.language) && (
+        <p className="text-sm text-gray-600 mb-4">
+          {[
+            movie.runtime ? `${movie.runtime} min` : null,
+            movie.country,
+            movie.language,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+      )}
+
+      {movie.synopsis && (
+        <section className="mb-4">
+          <h2 className="font-semibold text-sm mb-1">Synopsis</h2>
+          <p className="text-gray-800">{movie.synopsis}</p>
+        </section>
+      )}
+
+      {(movie.imdbId || movie.letterboxdSlug) && (
+        <section className="mb-6 flex gap-3 text-sm">
+          {movie.imdbId && (
+            <a
+              href={`https://www.imdb.com/title/${movie.imdbId}/`}
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
+              IMDb
+            </a>
+          )}
+          {movie.letterboxdSlug && (
+            <a
+              href={`https://letterboxd.com/film/${movie.letterboxdSlug}/`}
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
+              Letterboxd
+            </a>
+          )}
+        </section>
+      )}
 
       <Form method="post" className="space-y-2 mb-6">
         <input type="hidden" name="intent" value="update" />
