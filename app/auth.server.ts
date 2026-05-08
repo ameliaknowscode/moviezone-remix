@@ -17,6 +17,21 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendEmail({
+        to: user.email,
+        subject: "Reset your password — Movie Zone",
+        text: [
+          `Hi ${user.name ?? "there"},`,
+          ``,
+          `Click the link below to reset your Movie Zone password:`,
+          ``,
+          url,
+          ``,
+          `This link expires in an hour. If you didn't request this, you can ignore this email.`,
+        ].join("\n"),
+      });
+    },
   },
   emailVerification: {
     sendOnSignUp: true,

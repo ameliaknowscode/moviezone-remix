@@ -9,7 +9,8 @@ export function meta() {
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await auth.api.getSession({ headers: request.headers });
   if (session) throw redirect("/profile");
-  return null;
+  const url = new URL(request.url);
+  return { resetSuccess: url.searchParams.get("reset") === "ok" };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -46,10 +47,18 @@ export async function action({ request }: Route.ActionArgs) {
   });
 }
 
-export default function SignIn({ actionData }: Route.ComponentProps) {
+export default function SignIn({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
   return (
     <main className="p-8 max-w-sm">
       <h1 className="text-2xl font-bold mb-4">Sign in</h1>
+      {loaderData.resetSuccess && (
+        <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded px-3 py-2 mb-4">
+          Password reset. Sign in with your new password.
+        </p>
+      )}
       <Form method="post" className="space-y-3">
         <div>
           <label className="block text-sm mb-1">Email</label>
@@ -78,6 +87,11 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
         </button>
       </Form>
       <p className="text-sm text-gray-500 mt-4">
+        <Link to="/forgot-password" className="underline">
+          Forgot your password?
+        </Link>
+      </p>
+      <p className="text-sm text-gray-500 mt-2">
         New here?{" "}
         <Link to="/sign-up" className="underline">
           Create an account

@@ -9,5 +9,7 @@ export default [
   route("sign-in", "routes/sign-in.tsx"),
   route("sign-out", "routes/sign-out.tsx"),
   route("verify-email-sent", "routes/verify-email-sent.tsx"),
+  route("forgot-password", "routes/forgot-password.tsx"),
+  route("reset-password", "routes/reset-password.tsx"),
   route("profile", "routes/profile.tsx"),
 ] satisfies RouteConfig;
