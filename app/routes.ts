@@ -14,4 +14,5 @@ export default [
   route("welcome", "routes/welcome.tsx"),
   route("profile", "routes/profile.tsx"),
   route("users/:username", "routes/user.tsx"),
+  route("admin", "routes/admin/index.tsx"),
 ] satisfies RouteConfig;
