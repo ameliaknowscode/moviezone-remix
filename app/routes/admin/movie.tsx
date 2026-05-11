@@ -1,6 +1,7 @@
-import { Form, Link, redirect } from "react-router";
+import { Form, Link, redirect, useSearchParams } from "react-router";
 import { eq } from "drizzle-orm";
 import type { Route } from "./+types/movie";
+import { MovieFields } from "~/components/movie-fields";
 import { db } from "~/db/client.server";
 import { movies as moviesTable } from "~/db/schema";
 import { requireAdmin } from "~/lib/require-admin.server";
@@ -38,41 +39,63 @@ export async function action({ params, request }: Route.ActionArgs) {
   }
 
   if (intent === "update") {
-    const title = String(formData.get("title") ?? "").trim();
-    const yearRaw = String(formData.get("year") ?? "").trim();
-    const year = Number(yearRaw);
+    const values = {
+      title: String(formData.get("title") ?? "").trim(),
+      year: String(formData.get("year") ?? "").trim(),
+      synopsis: String(formData.get("synopsis") ?? "").trim(),
+      runtime: String(formData.get("runtime") ?? "").trim(),
+      country: String(formData.get("country") ?? "").trim(),
+      language: String(formData.get("language") ?? "").trim(),
+      imdbId: String(formData.get("imdbId") ?? "").trim(),
+      letterboxdSlug: String(formData.get("letterboxdSlug") ?? "").trim(),
+    };
 
-    const errors: { title?: string; year?: string } = {};
-    if (!title) errors.title = "Title is required";
-    if (!yearRaw || !Number.isInteger(year)) {
+    const year = Number(values.year);
+    const runtime = values.runtime ? Number(values.runtime) : null;
+
+    const errors: { title?: string; year?: string; runtime?: string } = {};
+    if (!values.title) errors.title = "Title is required";
+    if (!values.year || !Number.isInteger(year)) {
       errors.year = "Year must be a whole number";
+    }
+    if (
+      values.runtime &&
+      (!Number.isInteger(runtime) || (runtime ?? 0) < 0)
+    ) {
+      errors.runtime = "Runtime must be a whole number of minutes";
     }
 
     if (Object.keys(errors).length > 0) {
-      return { errors, values: { title, year: yearRaw } };
+      return { errors, values };
     }
 
-    const newSlug = movieSlug(title, year);
+    const newSlug = movieSlug(values.title, year);
 
     try {
       await db
         .update(moviesTable)
-        .set({ title, year, slug: newSlug })
+        .set({
+          title: values.title,
+          year,
+          slug: newSlug,
+          synopsis: values.synopsis || null,
+          runtime,
+          country: values.country || null,
+          language: values.language || null,
+          imdbId: values.imdbId || null,
+          letterboxdSlug: values.letterboxdSlug || null,
+        })
         .where(eq(moviesTable.slug, params.slug));
     } catch {
       return {
         errors: {
           title: "A movie with this title and year already exists",
         },
-        values: { title, year: yearRaw },
+        values,
       };
     }
 
-    if (newSlug !== params.slug) {
-      return redirect(`/admin/movies/${newSlug}`);
-    }
-
-    return { ok: true } as const;
+    return redirect(`/admin/movies/${newSlug}?saved=1`);
   }
 
   throw new Response("Unknown intent", { status: 400 });
@@ -83,6 +106,8 @@ export default function AdminMovie({
   actionData,
 }: Route.ComponentProps) {
   const { movie } = loaderData;
+  const [searchParams] = useSearchParams();
+  const saved = searchParams.get("saved") === "1";
   const errors =
     actionData && "errors" in actionData ? actionData.errors : undefined;
   const values =
@@ -109,30 +134,15 @@ export default function AdminMovie({
         </Link>
       </p>
 
-      <Form method="post" className="space-y-2 mb-6">
+      {saved && (
+        <div className="mb-4 rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
+          Saved.
+        </div>
+      )}
+
+      <Form method="post" className="space-y-3 mb-6">
         <input type="hidden" name="intent" value="update" />
-        <div>
-          <label className="block text-sm mb-1">Title</label>
-          <input
-            name="title"
-            defaultValue={values?.title ?? movie.title}
-            className="w-full border rounded px-2 py-1"
-          />
-          {errors?.title && (
-            <p className="text-sm text-red-600 mt-1">{errors.title}</p>
-          )}
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Year</label>
-          <input
-            name="year"
-            defaultValue={values?.year ?? String(movie.year)}
-            className="w-full border rounded px-2 py-1"
-          />
-          {errors?.year && (
-            <p className="text-sm text-red-600 mt-1">{errors.year}</p>
-          )}
-        </div>
+        <MovieFields defaults={movie} values={values} errors={errors} />
         <button type="submit" className="bg-black text-white rounded px-3 py-1">
           Update
         </button>
