@@ -15,4 +15,6 @@ export default [
   route("profile", "routes/profile.tsx"),
   route("users/:username", "routes/user.tsx"),
   route("admin", "routes/admin/index.tsx"),
+  route("admin/movies", "routes/admin/movies.tsx"),
+  route("admin/movies/:slug", "routes/admin/movie.tsx"),
 ] satisfies RouteConfig;
