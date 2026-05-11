@@ -5,6 +5,7 @@ interface HeaderProps {
     id: string;
     name: string | null;
     email: string;
+    role: string;
   } | null;
 }
 
@@ -19,6 +20,11 @@ export function Header({ user }: HeaderProps) {
           <Link to="/movies" className="text-gray-700 hover:text-black">
             Movies
           </Link>
+          {user?.role === "admin" && (
+            <Link to="/admin" className="text-gray-700 hover:text-black">
+              Admin
+            </Link>
+          )}
         </nav>
         {user ? (
           <div className="flex items-center gap-3 text-sm">

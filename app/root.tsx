@@ -27,7 +27,15 @@ export const links: Route.LinksFunction = () => [
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await auth.api.getSession({ headers: request.headers });
-  return { user: session?.user ?? null };
+  if (!session) return { user: null };
+  return {
+    user: {
+      id: session.user.id,
+      name: session.user.name,
+      email: session.user.email,
+      role: session.user.role ?? "user",
+    },
+  };
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
