@@ -21,4 +21,7 @@ export default [
   route("admin/genres", "routes/admin/genres.tsx"),
   route("admin/genres/new", "routes/admin/genre-new.tsx"),
   route("admin/genres/:slug", "routes/admin/genre.tsx"),
+  route("admin/people", "routes/admin/people.tsx"),
+  route("admin/people/new", "routes/admin/person-new.tsx"),
+  route("admin/people/:slug", "routes/admin/person.tsx"),
 ] satisfies RouteConfig;
