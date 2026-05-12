@@ -67,6 +67,21 @@ export const creditTypes = pgTable(
   ],
 );
 
+export const credits = pgTable("credits", {
+  id: serial("id").primaryKey(),
+  movieId: integer("movie_id")
+    .notNull()
+    .references(() => movies.id, { onDelete: "cascade" }),
+  personId: integer("person_id")
+    .notNull()
+    .references(() => people.id, { onDelete: "cascade" }),
+  typeId: integer("type_id")
+    .notNull()
+    .references(() => creditTypes.id, { onDelete: "restrict" }),
+  character: text("character"),
+  ordering: integer("ordering").notNull().default(0),
+});
+
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
   email: text("email").notNull().unique(),
