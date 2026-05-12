@@ -1,8 +1,13 @@
 import { Form, Link, redirect } from "react-router";
+import { asc } from "drizzle-orm";
 import type { Route } from "./+types/movie-new";
 import { MovieFields } from "~/components/movie-fields";
 import { db } from "~/db/client.server";
-import { movies as moviesTable } from "~/db/schema";
+import {
+  genres as genresTable,
+  movieGenres as movieGenresTable,
+  movies as moviesTable,
+} from "~/db/schema";
 import { requireAdmin } from "~/lib/require-admin.server";
 import { movieSlug } from "~/lib/slug";
 
@@ -12,7 +17,11 @@ export function meta() {
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAdmin(request);
-  return null;
+  const allGenres = await db
+    .select({ id: genresTable.id, name: genresTable.name })
+    .from(genresTable)
+    .orderBy(asc(genresTable.name));
+  return { allGenres };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -29,6 +38,10 @@ export async function action({ request }: Route.ActionArgs) {
     imdbId: String(formData.get("imdbId") ?? "").trim(),
     letterboxdSlug: String(formData.get("letterboxdSlug") ?? "").trim(),
   };
+  const genreIds = formData
+    .getAll("genreIds")
+    .map((v) => Number(v))
+    .filter((n) => Number.isInteger(n) && n > 0);
 
   const year = Number(values.year);
   const runtime = values.runtime ? Number(values.runtime) : null;
@@ -43,38 +56,58 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   if (Object.keys(errors).length > 0) {
-    return { errors, values };
+    return { errors, values, genreIds };
   }
 
   const slug = movieSlug(values.title, year);
 
   try {
-    await db.insert(moviesTable).values({
-      title: values.title,
-      year,
-      slug,
-      synopsis: values.synopsis || null,
-      runtime,
-      country: values.country || null,
-      language: values.language || null,
-      imdbId: values.imdbId || null,
-      letterboxdSlug: values.letterboxdSlug || null,
+    await db.transaction(async (tx) => {
+      const [inserted] = await tx
+        .insert(moviesTable)
+        .values({
+          title: values.title,
+          year,
+          slug,
+          synopsis: values.synopsis || null,
+          runtime,
+          country: values.country || null,
+          language: values.language || null,
+          imdbId: values.imdbId || null,
+          letterboxdSlug: values.letterboxdSlug || null,
+        })
+        .returning({ id: moviesTable.id });
+
+      if (genreIds.length > 0) {
+        await tx.insert(movieGenresTable).values(
+          genreIds.map((genreId) => ({
+            movieId: inserted.id,
+            genreId,
+          })),
+        );
+      }
     });
   } catch {
     return {
       errors: { title: "A movie with this title and year already exists" },
       values,
+      genreIds,
     };
   }
 
   return redirect(`/admin/movies/${slug}`);
 }
 
-export default function AdminMovieNew({ actionData }: Route.ComponentProps) {
+export default function AdminMovieNew({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
   const errors =
     actionData && "errors" in actionData ? actionData.errors : undefined;
   const values =
     actionData && "values" in actionData ? actionData.values : undefined;
+  const selectedGenreIds =
+    actionData && "genreIds" in actionData ? actionData.genreIds : [];
 
   return (
     <main className="p-8 max-w-xl">
@@ -85,7 +118,12 @@ export default function AdminMovieNew({ actionData }: Route.ComponentProps) {
       <h1 className="text-2xl font-bold mt-2 mb-4">Add a movie</h1>
 
       <Form method="post" className="space-y-3">
-        <MovieFields values={values} errors={errors} />
+        <MovieFields
+          values={values}
+          errors={errors}
+          allGenres={loaderData.allGenres}
+          selectedGenreIds={selectedGenreIds}
+        />
         <button type="submit" className="bg-black text-white rounded px-3 py-1">
           Add movie
         </button>

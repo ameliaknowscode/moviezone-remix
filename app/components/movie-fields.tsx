@@ -20,10 +20,17 @@ interface MovieFormValues {
   letterboxdSlug?: string;
 }
 
+interface GenreOption {
+  id: number;
+  name: string;
+}
+
 interface MovieFieldsProps {
   defaults?: MovieRecord;
   values?: MovieFormValues;
   errors?: { title?: string; year?: string; runtime?: string };
+  allGenres: GenreOption[];
+  selectedGenreIds: number[];
 }
 
 function pickString(
@@ -35,7 +42,14 @@ function pickString(
   return String(recordValue);
 }
 
-export function MovieFields({ defaults, values, errors }: MovieFieldsProps) {
+export function MovieFields({
+  defaults,
+  values,
+  errors,
+  allGenres,
+  selectedGenreIds,
+}: MovieFieldsProps) {
+  const selectedSet = new Set(selectedGenreIds);
   const v = {
     title: pickString(values?.title, defaults?.title),
     year: pickString(values?.year, defaults?.year),
@@ -122,6 +136,36 @@ export function MovieFields({ defaults, values, errors }: MovieFieldsProps) {
           placeholder="the-matrix"
           className="w-full border rounded px-2 py-1"
         />
+      </div>
+
+      <div>
+        <span className="block text-sm mb-1">Genres</span>
+        {allGenres.length === 0 ? (
+          <p className="text-sm text-gray-500">
+            No genres yet. Add some in the{" "}
+            <a href="/admin/genres" className="underline">
+              genres admin
+            </a>
+            .
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-x-4 gap-y-2">
+            {allGenres.map((genre) => (
+              <label
+                key={genre.id}
+                className="inline-flex items-center gap-2 text-sm"
+              >
+                <input
+                  type="checkbox"
+                  name="genreIds"
+                  value={genre.id}
+                  defaultChecked={selectedSet.has(genre.id)}
+                />
+                {genre.name}
+              </label>
+            ))}
+          </div>
+        )}
       </div>
 
       <div>
