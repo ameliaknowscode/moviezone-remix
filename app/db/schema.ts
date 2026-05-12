@@ -54,6 +54,19 @@ export const people = pgTable("people", {
   slug: text("slug").notNull().unique(),
 });
 
+export const creditTypes = pgTable(
+  "credit_types",
+  {
+    id: serial("id").primaryKey(),
+    name: text("name").notNull(),
+    slug: text("slug").notNull().unique(),
+    isCrew: boolean("is_crew").notNull().default(false),
+  },
+  (table) => [
+    uniqueIndex("credit_types_name_lower_unique").on(sql`lower(${table.name})`),
+  ],
+);
+
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
   email: text("email").notNull().unique(),

@@ -24,4 +24,7 @@ export default [
   route("admin/people", "routes/admin/people.tsx"),
   route("admin/people/new", "routes/admin/person-new.tsx"),
   route("admin/people/:slug", "routes/admin/person.tsx"),
+  route("admin/credit-types", "routes/admin/credit-types.tsx"),
+  route("admin/credit-types/new", "routes/admin/credit-type-new.tsx"),
+  route("admin/credit-types/:slug", "routes/admin/credit-type.tsx"),
 ] satisfies RouteConfig;
