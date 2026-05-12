@@ -48,6 +48,12 @@ export const movieGenres = pgTable(
   (table) => [primaryKey({ columns: [table.movieId, table.genreId] })],
 );
 
+export const people = pgTable("people", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+});
+
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
   email: text("email").notNull().unique(),

@@ -30,6 +30,11 @@ export default function AdminIndex() {
             Genres
           </Link>
         </li>
+        <li>
+          <Link to="/admin/people" className="underline">
+            People
+          </Link>
+        </li>
       </ul>
     </main>
   );
