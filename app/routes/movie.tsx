@@ -3,9 +3,12 @@ import { asc, eq } from "drizzle-orm";
 import type { Route } from "./+types/movie";
 import { db } from "~/db/client.server";
 import {
+  creditTypes as creditTypesTable,
+  credits as creditsTable,
   genres as genresTable,
   movieGenres as movieGenresTable,
   movies as moviesTable,
+  people as peopleTable,
 } from "~/db/schema";
 
 export function meta({ data }: Route.MetaArgs) {
@@ -23,22 +26,47 @@ export async function loader({ params }: Route.LoaderArgs) {
     throw new Response("Not Found", { status: 404 });
   }
 
-  const movieGenresList = await db
-    .select({
-      id: genresTable.id,
-      name: genresTable.name,
-      slug: genresTable.slug,
-    })
-    .from(movieGenresTable)
-    .innerJoin(genresTable, eq(movieGenresTable.genreId, genresTable.id))
-    .where(eq(movieGenresTable.movieId, movie.id))
-    .orderBy(asc(genresTable.name));
+  const [movieGenresList, movieCreditsList] = await Promise.all([
+    db
+      .select({
+        id: genresTable.id,
+        name: genresTable.name,
+        slug: genresTable.slug,
+      })
+      .from(movieGenresTable)
+      .innerJoin(genresTable, eq(movieGenresTable.genreId, genresTable.id))
+      .where(eq(movieGenresTable.movieId, movie.id))
+      .orderBy(asc(genresTable.name)),
+    db
+      .select({
+        id: creditsTable.id,
+        character: creditsTable.character,
+        ordering: creditsTable.ordering,
+        personId: peopleTable.id,
+        personName: peopleTable.name,
+        personSlug: peopleTable.slug,
+        typeId: creditTypesTable.id,
+        typeName: creditTypesTable.name,
+        typeIsCrew: creditTypesTable.isCrew,
+      })
+      .from(creditsTable)
+      .innerJoin(peopleTable, eq(creditsTable.personId, peopleTable.id))
+      .innerJoin(
+        creditTypesTable,
+        eq(creditsTable.typeId, creditTypesTable.id),
+      )
+      .where(eq(creditsTable.movieId, movie.id))
+      .orderBy(asc(creditsTable.ordering)),
+  ]);
 
-  return { movie, genres: movieGenresList };
+  const cast = movieCreditsList.filter((c) => !c.typeIsCrew);
+  const crew = movieCreditsList.filter((c) => c.typeIsCrew);
+
+  return { movie, genres: movieGenresList, cast, crew };
 }
 
 export default function Movie({ loaderData }: Route.ComponentProps) {
-  const { movie, genres } = loaderData;
+  const { movie, genres, cast, crew } = loaderData;
 
   return (
     <main className="p-8 max-w-xl">
@@ -80,6 +108,37 @@ export default function Movie({ loaderData }: Route.ComponentProps) {
         <section className="mb-4">
           <h2 className="font-semibold text-sm mb-1">Synopsis</h2>
           <p className="text-gray-800">{movie.synopsis}</p>
+        </section>
+      )}
+
+      {cast.length > 0 && (
+        <section className="mb-4">
+          <h2 className="font-semibold text-sm mb-1">Cast</h2>
+          <ul className="space-y-0.5 text-sm">
+            {cast.map((credit) => (
+              <li key={credit.id}>
+                <span className="text-gray-900">{credit.personName}</span>
+                {credit.character && (
+                  <span className="text-gray-500"> as {credit.character}</span>
+                )}
+                <span className="text-gray-500"> · {credit.typeName}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {crew.length > 0 && (
+        <section className="mb-4">
+          <h2 className="font-semibold text-sm mb-1">Crew</h2>
+          <ul className="space-y-0.5 text-sm">
+            {crew.map((credit) => (
+              <li key={credit.id}>
+                <span className="text-gray-900">{credit.personName}</span>
+                <span className="text-gray-500"> · {credit.typeName}</span>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 
