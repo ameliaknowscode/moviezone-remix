@@ -25,6 +25,11 @@ export default function AdminIndex() {
             Movies
           </Link>
         </li>
+        <li>
+          <Link to="/admin/genres" className="underline">
+            Genres
+          </Link>
+        </li>
       </ul>
     </main>
   );

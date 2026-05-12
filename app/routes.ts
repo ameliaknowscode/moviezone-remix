@@ -18,4 +18,7 @@ export default [
   route("admin/movies", "routes/admin/movies.tsx"),
   route("admin/movies/new", "routes/admin/movie-new.tsx"),
   route("admin/movies/:slug", "routes/admin/movie.tsx"),
+  route("admin/genres", "routes/admin/genres.tsx"),
+  route("admin/genres/new", "routes/admin/genre-new.tsx"),
+  route("admin/genres/:slug", "routes/admin/genre.tsx"),
 ] satisfies RouteConfig;
