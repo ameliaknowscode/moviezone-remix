@@ -35,6 +35,11 @@ export default function AdminIndex() {
             People
           </Link>
         </li>
+        <li>
+          <Link to="/admin/credit-types" className="underline">
+            Credit types
+          </Link>
+        </li>
       </ul>
     </main>
   );
