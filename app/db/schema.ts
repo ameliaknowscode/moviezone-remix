@@ -1,10 +1,13 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   integer,
   pgTable,
+  primaryKey,
   serial,
   text,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 export const movies = pgTable("movies", {
@@ -19,6 +22,31 @@ export const movies = pgTable("movies", {
   imdbId: text("imdb_id"),
   letterboxdSlug: text("letterboxd_slug"),
 });
+
+export const genres = pgTable(
+  "genres",
+  {
+    id: serial("id").primaryKey(),
+    name: text("name").notNull(),
+    slug: text("slug").notNull().unique(),
+  },
+  (table) => [
+    uniqueIndex("genres_name_lower_unique").on(sql`lower(${table.name})`),
+  ],
+);
+
+export const movieGenres = pgTable(
+  "movie_genres",
+  {
+    movieId: integer("movie_id")
+      .notNull()
+      .references(() => movies.id, { onDelete: "cascade" }),
+    genreId: integer("genre_id")
+      .notNull()
+      .references(() => genres.id, { onDelete: "cascade" }),
+  },
+  (table) => [primaryKey({ columns: [table.movieId, table.genreId] })],
+);
 
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
