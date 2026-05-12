@@ -1,9 +1,13 @@
 import { Form, Link, redirect, useSearchParams } from "react-router";
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import type { Route } from "./+types/movie";
 import { MovieFields } from "~/components/movie-fields";
 import { db } from "~/db/client.server";
-import { movies as moviesTable } from "~/db/schema";
+import {
+  genres as genresTable,
+  movieGenres as movieGenresTable,
+  movies as moviesTable,
+} from "~/db/schema";
 import { requireAdmin } from "~/lib/require-admin.server";
 import { movieSlug } from "~/lib/slug";
 
@@ -24,7 +28,22 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     throw new Response("Not Found", { status: 404 });
   }
 
-  return { movie };
+  const [allGenres, movieGenreRows] = await Promise.all([
+    db
+      .select({ id: genresTable.id, name: genresTable.name })
+      .from(genresTable)
+      .orderBy(asc(genresTable.name)),
+    db
+      .select({ genreId: movieGenresTable.genreId })
+      .from(movieGenresTable)
+      .where(eq(movieGenresTable.movieId, movie.id)),
+  ]);
+
+  return {
+    movie,
+    allGenres,
+    movieGenreIds: movieGenreRows.map((r) => r.genreId),
+  };
 }
 
 export async function action({ params, request }: Route.ActionArgs) {
@@ -49,6 +68,10 @@ export async function action({ params, request }: Route.ActionArgs) {
       imdbId: String(formData.get("imdbId") ?? "").trim(),
       letterboxdSlug: String(formData.get("letterboxdSlug") ?? "").trim(),
     };
+    const genreIds = formData
+      .getAll("genreIds")
+      .map((v) => Number(v))
+      .filter((n) => Number.isInteger(n) && n > 0);
 
     const year = Number(values.year);
     const runtime = values.runtime ? Number(values.runtime) : null;
@@ -66,32 +89,49 @@ export async function action({ params, request }: Route.ActionArgs) {
     }
 
     if (Object.keys(errors).length > 0) {
-      return { errors, values };
+      return { errors, values, genreIds };
     }
 
     const newSlug = movieSlug(values.title, year);
 
     try {
-      await db
-        .update(moviesTable)
-        .set({
-          title: values.title,
-          year,
-          slug: newSlug,
-          synopsis: values.synopsis || null,
-          runtime,
-          country: values.country || null,
-          language: values.language || null,
-          imdbId: values.imdbId || null,
-          letterboxdSlug: values.letterboxdSlug || null,
-        })
-        .where(eq(moviesTable.slug, params.slug));
+      await db.transaction(async (tx) => {
+        const [updated] = await tx
+          .update(moviesTable)
+          .set({
+            title: values.title,
+            year,
+            slug: newSlug,
+            synopsis: values.synopsis || null,
+            runtime,
+            country: values.country || null,
+            language: values.language || null,
+            imdbId: values.imdbId || null,
+            letterboxdSlug: values.letterboxdSlug || null,
+          })
+          .where(eq(moviesTable.slug, params.slug))
+          .returning({ id: moviesTable.id });
+
+        await tx
+          .delete(movieGenresTable)
+          .where(eq(movieGenresTable.movieId, updated.id));
+
+        if (genreIds.length > 0) {
+          await tx.insert(movieGenresTable).values(
+            genreIds.map((genreId) => ({
+              movieId: updated.id,
+              genreId,
+            })),
+          );
+        }
+      });
     } catch {
       return {
         errors: {
           title: "A movie with this title and year already exists",
         },
         values,
+        genreIds,
       };
     }
 
@@ -105,13 +145,15 @@ export default function AdminMovie({
   loaderData,
   actionData,
 }: Route.ComponentProps) {
-  const { movie } = loaderData;
+  const { movie, allGenres, movieGenreIds } = loaderData;
   const [searchParams] = useSearchParams();
   const saved = searchParams.get("saved") === "1";
   const errors =
     actionData && "errors" in actionData ? actionData.errors : undefined;
   const values =
     actionData && "values" in actionData ? actionData.values : undefined;
+  const selectedGenreIds =
+    actionData && "genreIds" in actionData ? actionData.genreIds : movieGenreIds;
 
   return (
     <main className="p-8 max-w-xl">
@@ -142,7 +184,13 @@ export default function AdminMovie({
 
       <Form method="post" className="space-y-3 mb-6">
         <input type="hidden" name="intent" value="update" />
-        <MovieFields defaults={movie} values={values} errors={errors} />
+        <MovieFields
+          defaults={movie}
+          values={values}
+          errors={errors}
+          allGenres={allGenres}
+          selectedGenreIds={selectedGenreIds}
+        />
         <button type="submit" className="bg-black text-white rounded px-3 py-1">
           Update
         </button>

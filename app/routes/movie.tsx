@@ -1,8 +1,12 @@
 import { Link } from "react-router";
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import type { Route } from "./+types/movie";
 import { db } from "~/db/client.server";
-import { movies as moviesTable } from "~/db/schema";
+import {
+  genres as genresTable,
+  movieGenres as movieGenresTable,
+  movies as moviesTable,
+} from "~/db/schema";
 
 export function meta({ data }: Route.MetaArgs) {
   return [{ title: data ? data.movie.title : "Movie" }];
@@ -19,11 +23,22 @@ export async function loader({ params }: Route.LoaderArgs) {
     throw new Response("Not Found", { status: 404 });
   }
 
-  return { movie };
+  const movieGenresList = await db
+    .select({
+      id: genresTable.id,
+      name: genresTable.name,
+      slug: genresTable.slug,
+    })
+    .from(movieGenresTable)
+    .innerJoin(genresTable, eq(movieGenresTable.genreId, genresTable.id))
+    .where(eq(movieGenresTable.movieId, movie.id))
+    .orderBy(asc(genresTable.name));
+
+  return { movie, genres: movieGenresList };
 }
 
 export default function Movie({ loaderData }: Route.ComponentProps) {
-  const { movie } = loaderData;
+  const { movie, genres } = loaderData;
 
   return (
     <main className="p-8 max-w-xl">
@@ -46,6 +61,19 @@ export default function Movie({ loaderData }: Route.ComponentProps) {
             .filter(Boolean)
             .join(" · ")}
         </p>
+      )}
+
+      {genres.length > 0 && (
+        <ul className="flex flex-wrap gap-2 mb-4">
+          {genres.map((genre) => (
+            <li
+              key={genre.id}
+              className="text-xs bg-gray-100 text-gray-700 rounded-full px-2 py-1"
+            >
+              {genre.name}
+            </li>
+          ))}
+        </ul>
       )}
 
       {movie.synopsis && (
