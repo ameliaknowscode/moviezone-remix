@@ -1,3 +1,30 @@
-import { type RouteConfig, index } from "@react-router/dev/routes";
+import { type RouteConfig, index, route } from "@react-router/dev/routes";
 
-export default [index("routes/home.tsx")] satisfies RouteConfig;
+export default [
+  index("routes/home.tsx"),
+  route("movies", "routes/movies.tsx"),
+  route("movies/:slug", "routes/movie.tsx"),
+  route("api/auth/*", "routes/api.auth.tsx"),
+  route("sign-up", "routes/sign-up.tsx"),
+  route("sign-in", "routes/sign-in.tsx"),
+  route("sign-out", "routes/sign-out.tsx"),
+  route("verify-email-sent", "routes/verify-email-sent.tsx"),
+  route("forgot-password", "routes/forgot-password.tsx"),
+  route("reset-password", "routes/reset-password.tsx"),
+  route("welcome", "routes/welcome.tsx"),
+  route("profile", "routes/profile.tsx"),
+  route("users/:username", "routes/user.tsx"),
+  route("admin", "routes/admin/index.tsx"),
+  route("admin/movies", "routes/admin/movies.tsx"),
+  route("admin/movies/new", "routes/admin/movie-new.tsx"),
+  route("admin/movies/:slug", "routes/admin/movie.tsx"),
+  route("admin/genres", "routes/admin/genres.tsx"),
+  route("admin/genres/new", "routes/admin/genre-new.tsx"),
+  route("admin/genres/:slug", "routes/admin/genre.tsx"),
+  route("admin/people", "routes/admin/people.tsx"),
+  route("admin/people/new", "routes/admin/person-new.tsx"),
+  route("admin/people/:slug", "routes/admin/person.tsx"),
+  route("admin/credit-types", "routes/admin/credit-types.tsx"),
+  route("admin/credit-types/new", "routes/admin/credit-type-new.tsx"),
+  route("admin/credit-types/:slug", "routes/admin/credit-type.tsx"),
+] satisfies RouteConfig;
