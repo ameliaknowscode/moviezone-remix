@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   integer,
+  numeric,
   pgTable,
   primaryKey,
   serial,
@@ -145,6 +146,21 @@ export const watchlist = pgTable(
       .notNull()
       .references(() => movies.id, { onDelete: "cascade" }),
     addedAt: timestamp("added_at").notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.movieId] })],
+);
+
+export const userMovieRating = pgTable(
+  "user_movie_rating",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    movieId: integer("movie_id")
+      .notNull()
+      .references(() => movies.id, { onDelete: "cascade" }),
+    rating: numeric("rating", { precision: 2, scale: 1 }).notNull(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => [primaryKey({ columns: [table.userId, table.movieId] })],
 );
