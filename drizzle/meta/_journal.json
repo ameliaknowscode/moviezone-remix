@@ -71,6 +71,13 @@
       "when": 1778556574379,
       "tag": "0009_fuzzy_madame_masque",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1780987169846,
+      "tag": "0010_smiling_mariko_yashida",
+      "breakpoints": true
     }
   ]
 }
