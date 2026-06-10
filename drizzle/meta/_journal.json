@@ -78,6 +78,13 @@
       "when": 1780987169846,
       "tag": "0010_smiling_mariko_yashida",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1780988831335,
+      "tag": "0011_happy_moonstone",
+      "breakpoints": true
     }
   ]
 }
