@@ -13,6 +13,7 @@ export default [
   route("reset-password", "routes/reset-password.tsx"),
   route("welcome", "routes/welcome.tsx"),
   route("profile", "routes/profile.tsx"),
+  route("watchlist", "routes/watchlist.tsx"),
   route("users/:username", "routes/user.tsx"),
   route("admin", "routes/admin/index.tsx"),
   route("admin/movies", "routes/admin/movies.tsx"),

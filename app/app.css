@@ -5,6 +5,16 @@
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
+.star-rating-fieldset:not(:has(label:hover)) input:checked + label,
+.star-rating-fieldset:not(:has(label:hover)) label:has(~ input:checked) {
+  color: var(--color-yellow-400);
+}
+
+.star-rating-fieldset label:hover,
+.star-rating-fieldset label:has(~ label:hover) {
+  color: var(--color-yellow-400);
+}
+
 html,
 body {
   @apply bg-white dark:bg-gray-950;
