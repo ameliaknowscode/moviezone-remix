@@ -25,6 +25,11 @@ export function Header({ user }: HeaderProps) {
               Watchlist
             </Link>
           )}
+          {user && (
+            <Link to="/diary" className="text-gray-700 hover:text-black">
+              Diary
+            </Link>
+          )}
           {user?.role === "admin" && (
             <Link to="/admin" className="text-gray-700 hover:text-black">
               Admin

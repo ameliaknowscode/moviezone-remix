@@ -1,6 +1,8 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  date,
+  index,
   integer,
   numeric,
   pgTable,
@@ -163,4 +165,33 @@ export const userMovieRating = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => [primaryKey({ columns: [table.userId, table.movieId] })],
+);
+
+// Rewatch status is not stored: it's derived at read time as
+// row_number() over (partition by user_id, movie_id order by watched_on, created_at) > 1
+export const diaryEntries = pgTable(
+  "diary_entries",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    movieId: integer("movie_id")
+      .notNull()
+      .references(() => movies.id, { onDelete: "cascade" }),
+    watchedOn: date("watched_on", { mode: "string" }).notNull(),
+    rating: numeric("rating", { precision: 2, scale: 1 }),
+    review: text("review"),
+    containsSpoilers: boolean("contains_spoilers").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("diary_entries_user_watched_idx").on(table.userId, table.watchedOn),
+    index("diary_entries_rewatch_idx").on(
+      table.userId,
+      table.movieId,
+      table.watchedOn,
+      table.createdAt,
+    ),
+  ],
 );
