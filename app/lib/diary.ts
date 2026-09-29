@@ -10,6 +10,22 @@ export function todayIso(): string {
   return new Date().toLocaleDateString("en-CA");
 }
 
+// Formats a YYYY-MM-DD string as e.g. "Sep 28, 2026". Pinned to UTC and an
+// explicit locale so server and browser render identical text (no
+// hydration mismatch, no off-by-one day from local time zones).
+export function formatWatchedOn(value: string): string {
+  return new Date(`${value}T00:00:00Z`).toLocaleDateString("en-US", {
+    timeZone: "UTC",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+export function ratingStars(rating: number): string {
+  return "★".repeat(Math.floor(rating)) + (rating % 1 ? "½" : "");
+}
+
 function isRealDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const [y, m, d] = value.split("-").map(Number);
