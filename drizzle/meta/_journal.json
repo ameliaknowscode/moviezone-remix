@@ -85,6 +85,13 @@
       "when": 1780988831335,
       "tag": "0011_happy_moonstone",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790647521245,
+      "tag": "0012_thin_pete_wisdom",
+      "breakpoints": true
     }
   ]
 }
