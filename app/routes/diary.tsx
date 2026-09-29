@@ -90,6 +90,12 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
                     Rewatch
                   </span>
                 )}
+                <Link
+                  to={`/diary/${entry.id}/edit`}
+                  className="ml-auto text-xs text-gray-500 hover:text-black underline"
+                >
+                  Edit
+                </Link>
               </div>
 
               {entry.review &&

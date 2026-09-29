@@ -16,6 +16,7 @@ export default [
   route("profile", "routes/profile.tsx"),
   route("watchlist", "routes/watchlist.tsx"),
   route("diary", "routes/diary.tsx"),
+  route("diary/:id/edit", "routes/diary-entry-edit.tsx"),
   route("users/:username", "routes/user.tsx"),
   route("admin", "routes/admin/index.tsx"),
   route("admin/movies", "routes/admin/movies.tsx"),
