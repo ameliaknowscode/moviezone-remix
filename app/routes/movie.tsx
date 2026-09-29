@@ -14,10 +14,7 @@ import {
   userMovieRating as userMovieRatingTable,
   watchlist as watchlistTable,
 } from "~/db/schema";
-
-const VALID_RATINGS = new Set([
-  "0.5", "1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5",
-]);
+import { VALID_RATINGS } from "~/lib/ratings";
 
 export function meta({ data }: Route.MetaArgs) {
   return [{ title: data ? data.movie.title : "Movie" }];
@@ -198,23 +195,31 @@ export default function Movie({ loaderData }: Route.ComponentProps) {
       {isSignedIn && (
         <div className="mb-4 space-y-2">
           <StarRating current={rating} />
-          <Form method="post">
-            <input
-              type="hidden"
-              name="intent"
-              value={onWatchlist ? "watchlist-remove" : "watchlist-add"}
-            />
-            <button
-              type="submit"
-              className={
-                onWatchlist
-                  ? "text-sm border border-gray-300 rounded px-3 py-1 hover:bg-gray-50"
-                  : "text-sm bg-black text-white rounded px-3 py-1 hover:bg-gray-800"
-              }
+          <div className="flex items-center gap-2">
+            <Link
+              to={`/movies/${movie.slug}/log`}
+              className="text-sm bg-black text-white rounded px-3 py-1 hover:bg-gray-800"
             >
-              {onWatchlist ? "✓ On watchlist" : "+ Watchlist"}
-            </button>
-          </Form>
+              Log a watch
+            </Link>
+            <Form method="post">
+              <input
+                type="hidden"
+                name="intent"
+                value={onWatchlist ? "watchlist-remove" : "watchlist-add"}
+              />
+              <button
+                type="submit"
+                className={
+                  onWatchlist
+                    ? "text-sm border border-gray-300 rounded px-3 py-1 hover:bg-gray-50"
+                    : "text-sm bg-black text-white rounded px-3 py-1 hover:bg-gray-800"
+                }
+              >
+                {onWatchlist ? "✓ On watchlist" : "+ Watchlist"}
+              </button>
+            </Form>
+          </div>
         </div>
       )}
 
